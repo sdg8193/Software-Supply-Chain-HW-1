@@ -31,7 +31,7 @@ def get_verification_proof(log_index, debug=False):
 
     iP = entry_data['verification']['inclusionProof']
 
-    lh = json.loads(base64.b64decode(entry_data['body']).decode())['spec']['data']['hash']['value']
+    lh = compute_leaf_hash(entry_data.get('body'))
     blob = {
         "leaf_hash": lh,
         "index": iP['logIndex'],
@@ -75,15 +75,25 @@ def inclusion(log_index, artifact_filepath, debug=False):
     signature = base64.b64decode(decoded_data['spec']['signature']['content'])
     try:
         verify_artifact_signature(signature, public_key, artifact_filepath)
-    except:
-        print("Failed: Returning")
-        return()
+        print("Signature verification successful!")
+    except Exception as e:
+        print(f"{e}")
     
-    ##comeback
     info = get_verification_proof(log_index)
-    print(info.keys())
-    verify_inclusion(DefaultHasher, info.get('index'), info.get('tree_size'), info.get('leaf_hash'), info.get('hashes'), info.get('root_hash'))
-    pass
+    try:
+        verify_inclusion(
+            DefaultHasher,
+            info.get('index'),
+            info.get('tree_size'),
+            info.get('leaf_hash'),
+            info.get('hashes'),
+            info.get('root_hash'),
+            debug=debug
+        )
+        print("Inclusion proof verification successful!")
+    except Exception as e:
+        print(f"Inclusion proof FAILED!\n{e}")
+        return
 
 def get_latest_checkpoint(debug=False):
     url = f"{SERVER}/api/v1/log"
@@ -100,8 +110,43 @@ def get_latest_checkpoint(debug=False):
 
 def consistency(prev_checkpoint, debug=False):
     # verify that prev checkpoint is not empty
-    # get_latest_checkpoint()
-    pass
+    latest = get_latest_checkpoint(debug)
+    if not latest:
+        print("Failed to fetch latest checkpoint")
+        return
+    
+    tree_id = prev_checkpoint['treeID']
+    old_size = prev_checkpoint['treeSize']
+    old_root = prev_checkpoint['rootHash']
+    new_size = latest['treeSize']
+    
+    proof_url = f"{SERVER}/api/v1/log/proof?firstSize={old_size}&lastSize={new_size}&treeID={tree_id}"
+    response = requests.get(proof_url)
+    if response.status_code != 200:
+        print(f"Failed to fetch consistency proof: {response.status_code}")
+        print(response.text)
+        return
+    
+    proof_data = response.json()
+    proof_hashes = proof_data.get('hashes')
+    latest_root_from_proof = proof_data.get('rootHash')
+    
+    if proof_hashes is None or latest_root_from_proof is None:
+        print("Consistency proof incomplete or missing")
+        return
+    
+    try:
+        verify_consistency(
+            DefaultHasher,
+            size1=old_size,
+            size2=new_size,
+            proof=proof_hashes,
+            root1=old_root,
+            root2=latest_root_from_proof
+        )
+        print("Checkpoint consistency verified successfully!")
+    except Exception as e:
+        print(f"Consistency verification failed: {e}")
 
 def main():
     debug = False
