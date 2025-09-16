@@ -42,7 +42,8 @@ def verify_artifact_signature(signature, public_key, artifact_filename):
     #    with open("hello.sig", "rb") as sig_file:
     #        signature = sig_file.read()
 
-    public_key = load_pem_public_key(public_key)
+    public_key = load_pem_public_key(public_key, backend=default_backend())
+    
     # load the data to be verified
     with open(artifact_filename, "rb") as data_file:
         data = data_file.read()
