@@ -75,10 +75,11 @@ def inclusion(log_index, artifact_filepath, debug=False):
     signature = base64.b64decode(decoded_data['spec']['signature']['content'])
     try:
         verify_artifact_signature(signature, public_key, artifact_filepath)
-        print("Signature verification successful!")
+        print("Signature is valid.")
     except Exception as e:
-        print(f"{e}")
-    
+        if debug:
+            print(f"{e}")
+
     info = get_verification_proof(log_index)
     try:
         verify_inclusion(
@@ -90,7 +91,7 @@ def inclusion(log_index, artifact_filepath, debug=False):
             info.get('root_hash'),
             debug=debug
         )
-        print("Inclusion proof verification successful!")
+        print("Offline root hash calculation for inclusion verified.")
     except Exception as e:
         print(f"Inclusion proof FAILED!\n{e}")
         return
@@ -110,16 +111,16 @@ def get_latest_checkpoint(debug=False):
 
 def consistency(prev_checkpoint, debug=False):
     # verify that prev checkpoint is not empty
-    latest = get_latest_checkpoint(debug)
-    if not latest:
-        print("Failed to fetch latest checkpoint")
-        return
+    if not all(prev_checkpoint.values()):
+        print("prev_checkpoint contains empty values")
     
+    latest = get_latest_checkpoint()
     tree_id = prev_checkpoint['treeID']
     old_size = prev_checkpoint['treeSize']
     old_root = prev_checkpoint['rootHash']
     new_size = latest['treeSize']
-    
+    new_root = latest['rootHash']
+
     proof_url = f"{SERVER}/api/v1/log/proof?firstSize={old_size}&lastSize={new_size}&treeID={tree_id}"
     response = requests.get(proof_url)
     if response.status_code != 200:
@@ -129,11 +130,7 @@ def consistency(prev_checkpoint, debug=False):
     
     proof_data = response.json()
     proof_hashes = proof_data.get('hashes')
-    latest_root_from_proof = proof_data.get('rootHash')
     
-    if proof_hashes is None or latest_root_from_proof is None:
-        print("Consistency proof incomplete or missing")
-        return
     
     try:
         verify_consistency(
@@ -142,9 +139,9 @@ def consistency(prev_checkpoint, debug=False):
             size2=new_size,
             proof=proof_hashes,
             root1=old_root,
-            root2=latest_root_from_proof
+            root2=new_root
         )
-        print("Checkpoint consistency verified successfully!")
+        print("Consistency verification successful.")
     except Exception as e:
         print(f"Consistency verification failed: {e}")
 
