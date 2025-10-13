@@ -115,6 +115,7 @@ def consistency(prev_checkpoint, debug=False):
     # verify that prev checkpoint is not empty
     if not all(prev_checkpoint.values()):
         print("prev_checkpoint contains empty values")
+        return
     
     latest = get_latest_checkpoint()
     tree_id = prev_checkpoint['treeID']
