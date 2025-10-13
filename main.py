@@ -60,7 +60,7 @@ def inclusion(log_index, artifact_filepath, debug=False):
         return
 
     #get log
-    transaction_log = get_log_entry(log_index)
+    transaction_log = get_log_entry(log_index,debug)
     key = list(transaction_log.keys())[0]
 
     #get body and decode
