@@ -51,11 +51,13 @@ def inclusion(log_index, artifact_filepath, debug=False):
     if artifact_filepath is None or not (os.path.isfile(artifact_filepath)):
         print("Please include valid filepath")
         return
-    f = open(artifact_filepath,"rb")
+    
     try:
-        filebytes = f.read()
+        with open(artifact_filepath, "rb") as f:
+            filebytes = f.read()
     except:
         print(f"Failed to read file: {artifact_filepath}")
+        return
 
     #get log
     transaction_log = get_log_entry(log_index)
