@@ -17,6 +17,11 @@ def get_log_entry(log_index, debug=False):
     url = f"{SERVER}/api/v1/log/entries?logIndex={log_index}"
     response = requests.get(url)
 
+    
+    if response.status_code != 200:
+        print(f"Error fetching log entry {log_index}: Status Code - {response.status_code}")
+        exit()
+
     if debug:
         print(f"get_log_entry:\n {response}")
     return response.json()
