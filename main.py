@@ -29,15 +29,15 @@ def get_verification_proof(log_index, debug=False):
     key = list(entry.keys())[0]
     entry_data = entry[key]
 
-    iP = entry_data['verification']['inclusionProof']
+    inclusion_proof = entry_data['verification']['inclusionProof']
 
-    lh = compute_leaf_hash(entry_data.get('body'))
+    leaf_hash = compute_leaf_hash(entry_data.get('body'))
     blob = {
-        "leaf_hash": lh,
-        "index": iP['logIndex'],
-        "root_hash": iP['rootHash'],
-        "tree_size": iP['treeSize'],
-        "hashes": iP['hashes']
+        "leaf_hash": leaf_hash,
+        "index": inclusion_proof['logIndex'],
+        "root_hash": inclusion_proof['rootHash'],
+        "tree_size": inclusion_proof['treeSize'],
+        "hashes": inclusion_proof['hashes']
     }
 
     return blob
