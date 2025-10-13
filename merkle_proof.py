@@ -22,9 +22,9 @@ class Hasher:
         h.update(leaf)
         return h.digest()
 
-    def hash_children(self, l, r):
+    def hash_children(self, left_hash, right_hash):
         h = self.new()
-        b = bytes([RFC6962_NODE_HASH_PREFIX]) + l + r
+        b = bytes([RFC6962_NODE_HASH_PREFIX]) + left_hash + right_hash
         h.update(b)
         return h.digest()
 

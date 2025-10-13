@@ -59,10 +59,14 @@ def inclusion(log_index, artifact_filepath, debug=False):
     
     try:
         with open(artifact_filepath, "rb") as f:
-            filebytes = f.read()
-    except:
-        print(f"Failed to read file: {artifact_filepath}")
-        return
+            f.read()
+    except FileNotFoundError:
+        print(f"File Not Found: {artifact_filepath}")
+        exit()
+    except Exception as e:
+        print(f"Failed to read file: {artifact_filepath}, error {e}")
+        exit()
+    
 
     #get log
     transaction_log = get_log_entry(log_index,debug)
