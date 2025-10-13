@@ -1,3 +1,11 @@
+"""
+Rekor Verifier Client.
+
+This module provides command-line functions for querying the Rekor transparency
+log and verifying the inclusion and consistency of log entries and checkpoints
+using Merkle tree proofs.
+"""
+
 import argparse
 import json
 import base64
@@ -10,20 +18,40 @@ from merkle_proof import (
     verify_consistency,
     verify_inclusion,
     compute_leaf_hash,
-    RootMismatchError
+    RootMismatchError,
 )
 
 SERVER = "https://rekor.sigstore.dev"
 
 
 def get_log_entry(log_index, debug=False):
+    """
+    Fetches a specific log entry from the Rekor server by its log index.
+
+    Parameters
+    ----------
+    log_index : int
+        The index of the log entry to retrieve (must be > 0).
+    debug : bool, optional
+        If True, prints the raw HTTP response (default is False).
+
+    Returns
+    -------
+    dict
+        The JSON response containing the log entry data.
+
+    Raises
+    ------
+    SystemExit
+        If the log index is invalid or the HTTP request fails.
+    """
     # verify that log index value is sane
     if not (isinstance(log_index, int) and log_index > 0):
         print("Log index must be an int > 0")
         sys.exit()
 
     url = f"{SERVER}/api/v1/log/entries?logIndex={log_index}"
-    response = requests.get(url)
+    response = requests.get(url,timeout=10)
 
     if response.status_code != 200:
         print(
@@ -37,6 +65,22 @@ def get_log_entry(log_index, debug=False):
 
 
 def get_verification_proof(log_index, debug=False):
+    """
+    Extracts the data needed for offline Merkle tree inclusion verification.
+
+    Parameters
+    ----------
+    log_index : int
+        The index of the log entry to retrieve proof data for.
+    debug : bool, optional
+        If True, prints debug information (default is False).
+
+    Returns
+    -------
+    dict
+        A dictionary containing 'leaf_hash', 'index', 'root_hash', 'tree_size',
+    """
+
     if debug:
         print(f"get_verification_proof:\n{log_index}")
     # verify that log index value is sane
@@ -59,6 +103,17 @@ def get_verification_proof(log_index, debug=False):
 
 
 def inclusion(log_index, artifact_filepath, debug=False):
+    """
+    Performs inclusion verification for an artifact.
+    Parameters
+    ----------
+    log_index : int
+        The index of the log entry to verify.
+    artifact_filepath : str
+        The local path to the original artifact file.
+    debug : bool, optional
+        If True, prints detailed debug information (default is False).
+    """
     # verify that log index and artifact filepath values are sane
     if not (isinstance(log_index, int) and log_index > 0):
         print("Log index must be an int > 0")
@@ -116,8 +171,27 @@ def inclusion(log_index, artifact_filepath, debug=False):
 
 
 def get_latest_checkpoint(debug=False):
+    """
+    Fetches the latest tree checkpoint from the Rekor server.
+
+    Parameters
+    ----------
+    debug : bool, optional
+        If True, prints the raw HTTP response text (default is False).
+
+    Returns
+    -------
+    dict
+        The JSON response containing the latest checkpoint details, including
+        'rootHash', 'treeSize', and 'treeID'.
+
+    Raises
+    ------
+    SystemExit
+        If the HTTP request fails.
+    """
     url = f"{SERVER}/api/v1/log"
-    response = requests.get(url)
+    response = requests.get(url,timeout=10)
     if debug:
         print(f"get_latest_checkpoint:\n {response.text}")
     if response.status_code == 200:
@@ -129,6 +203,23 @@ def get_latest_checkpoint(debug=False):
 
 
 def consistency(prev_checkpoint, debug=False):
+    """
+    Verifies the consistency between a previous checkpoint and the latest checkpoint.
+
+    Parameters
+    ----------
+    prev_checkpoint : dict
+        The older checkpoint, must contain 'treeID', 'treeSize', and 'rootHash'.
+    debug : bool, optional
+        If True, prints debug information, including the proof data (default is False).
+
+    Raises
+    ------
+    ValueError
+        If the consistency proof or its components are invalid.
+    RootMismatchError
+        If the calculated root for either tree does not match the provided root.
+    """
     # verify that prev checkpoint is not empty
     if not all(prev_checkpoint.values()):
         print("prev_checkpoint contains empty values")
@@ -148,7 +239,7 @@ def consistency(prev_checkpoint, debug=False):
         f"&treeID={tree_id}"
     )
 
-    response = requests.get(proof_url)
+    response = requests.get(proof_url,timeout=10)
     if response.status_code != 200:
         print(f"Failed to fetch consistency proof: {response.status_code}")
         print(response.text)
@@ -173,7 +264,11 @@ def consistency(prev_checkpoint, debug=False):
     except RootMismatchError as function_error:
         print(f"Error: {function_error}")
 
+
 def main():
+    """
+    The main entry point for the Rekor Verifier command-line application.
+    """
     debug = False
     parser = argparse.ArgumentParser(description="Rekor Verifier")
     parser.add_argument(
