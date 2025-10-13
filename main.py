@@ -113,7 +113,7 @@ def get_latest_checkpoint(debug=False):
     else:
         print(f"Error: Status Code - {response.status_code}")
         print(f"Response: {response.text}")
-        return None
+        exit() 
     return response
 
 def consistency(prev_checkpoint, debug=False):
