@@ -4,6 +4,6 @@ repos:
       - id: trufflehog
         name: TruffleHog Secrets Scan (Latest Commit)
         description: Detects secrets in staged changes for a fast check.
-        entry: bash -c 'trufflehog git file://. --since-commit HEAD^ --no-verification --fail --no-update'
+        entry: bash -c 'trufflehog git file://. --since-commit HEAD^ --no-verification --fail --no-update --include-detectors=all'
         language: system
         stages: [commit]
