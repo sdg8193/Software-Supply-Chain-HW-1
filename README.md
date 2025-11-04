@@ -22,7 +22,8 @@ Key features include:
 
 2.  Install the required dependencies:
     ```bash
-    pip install -r requirements.txt
+    pip install poetry
+    poetry install
     ```
 
 ## Usage
