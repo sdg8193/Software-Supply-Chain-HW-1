@@ -195,7 +195,12 @@ def get_latest_checkpoint(debug=False):
     if debug:
         print(f"get_latest_checkpoint:\n {response.text}")
     if response.status_code == 200:
-        return response.json()
+        try:
+            return response.json()
+        except ValueError:
+            print("Failed to decode JSON from Rekor server")
+            sys.exit()
+    
 
     print(f"Error: Status Code - {response.status_code}")
     print(f"Response: {response.text}")
