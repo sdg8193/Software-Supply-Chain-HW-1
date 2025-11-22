@@ -32,3 +32,5 @@ venv/
 
 #repo for homework artifacts that shouldn't be comitted
 donotupload/
+.coverage
+test_env/

@@ -12,8 +12,8 @@ import base64
 import os
 import sys
 import requests
-from util import extract_public_key, verify_artifact_signature
-from merkle_proof import (
+from .util import extract_public_key, verify_artifact_signature
+from .merkle_proof import (
     DEFAULT_HASHER,
     verify_consistency,
     verify_inclusion,

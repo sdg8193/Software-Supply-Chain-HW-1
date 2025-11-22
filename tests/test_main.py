@@ -5,8 +5,8 @@ import os
 from jsonschema import validate
 from unittest import mock
 
-# Import all functions from main.py
-from main import main, get_verification_proof, get_latest_checkpoint, get_log_entry, consistency, inclusion
+# Import all functions from sdg8193_rekor.cli.py
+from sdg8193_rekor.cli import main, get_verification_proof, get_latest_checkpoint, get_log_entry, consistency, inclusion
 
 
 # --- MOCK DATA & SCHEMAS ---
@@ -187,7 +187,7 @@ def test_consistency_proof_api_failure(mocker, capsys):
     mock_response = mocker.Mock()
     mock_response.status_code = 500
     mock_response.text = "Internal Server Error"
-    mocker.patch("main.requests.get", return_value=mock_response)
+    mocker.patch("sdg8193_rekor.cli.requests.get", return_value=mock_response)
 
     # get system exit
     with pytest.raises(SystemExit):
@@ -206,7 +206,7 @@ def test_consistency_verification_error(mocker, capsys):
         "rootHash": "deadbeef"  
     }
 
-    mocker.patch("main.get_latest_checkpoint", return_value=ACTUAL_LOG_ENTRY)
+    mocker.patch("sdg8193_rekor.cli.get_latest_checkpoint", return_value=ACTUAL_LOG_ENTRY)
     consistency(prev_checkpoint, debug=False)
 
     captured = capsys.readouterr()
@@ -254,7 +254,7 @@ def test_inclusion_invalid_log_index(capsys):
 def test_get_log_entry_http_error(mocker):
     mock_response = mocker.Mock()
     mock_response.status_code = 500
-    mocker.patch("main.requests.get", return_value=mock_response)
+    mocker.patch("sdg8193_rekor.cli.requests.get", return_value=mock_response)
     with pytest.raises(SystemExit):
         get_log_entry(1)
 
@@ -266,7 +266,7 @@ def test_get_verification_proof_debug(mocker, capsys):
             "verification": {"inclusionProof": {"logIndex": 1, "rootHash": "root", "treeSize": 1, "hashes": []}}
         }
     }
-    mocker.patch("main.get_log_entry", return_value=mock_entry)
+    mocker.patch("sdg8193_rekor.cli.get_log_entry", return_value=mock_entry)
     blob = get_verification_proof(1, debug=True)
     captured = capsys.readouterr()
     assert "get_verification_proof" in captured.out
@@ -274,10 +274,10 @@ def test_get_verification_proof_debug(mocker, capsys):
 
 def test_consistency_verify_exceptions(mocker, capsys):
     prev = ACTUAL_LOG_ENTRY
-    mocker.patch("main.get_latest_checkpoint", return_value=ACTUAL_LOG_ENTRY)
-    mocker.patch("main.requests.get", return_value=mock.Mock(status_code=200, json=lambda: {"hashes":[]}))
+    mocker.patch("sdg8193_rekor.cli.get_latest_checkpoint", return_value=ACTUAL_LOG_ENTRY)
+    mocker.patch("sdg8193_rekor.cli.requests.get", return_value=mock.Mock(status_code=200, json=lambda: {"hashes":[]}))
 
-    mocker.patch("main.verify_consistency", side_effect=ValueError("bad"))
+    mocker.patch("sdg8193_rekor.cli.verify_consistency", side_effect=ValueError("bad"))
     consistency(prev)
     captured = capsys.readouterr()
     assert "Consistency verification failed" in captured.out
