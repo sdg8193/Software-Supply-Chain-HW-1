@@ -38,9 +38,6 @@ jobs:
       - name: Linting (Ruff)
         run: poetry run ruff check src/sdg8193_rekor/cli.py
 
-      - name: Linting (Flake8)
-        run: poetry run flake8 src/sdg8193_rekor/cli.py
-
       - name: Security Audit (Bandit)
         run: poetry run bandit -c pyproject.toml -r src/sdg8193_rekor/cli.py
 
