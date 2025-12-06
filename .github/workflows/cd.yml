@@ -1,29 +1,29 @@
 name: CD Pipeline
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "v*"
 
 permissions:
-  contents: write 
-  id-token: write   #
-  attestations: write 
+  contents: write
+  id-token: write
+  attestations: write
 
 jobs:
   release:
-    name: Build, Publish, SBOM
     runs-on: ubuntu-latest
     env:
       PACKAGE_NAME: sdg8193_rekor
-    
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Get Version Number
+      - name: Extract Version from Tag
         id: get_version
         run: |
-          VERSION=${{ github.event.release.tag_name }}
+          VERSION=${GITHUB_REF_NAME}
           CLEAN_VERSION=${VERSION#v}
           echo "PACKAGE_VERSION=$CLEAN_VERSION" >> $GITHUB_OUTPUT
 
@@ -34,17 +34,15 @@ jobs:
 
       - name: Install Poetry
         uses: snok/install-poetry@v1
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-      
+
       - name: Install Dependencies
         run: poetry install --no-interaction --with dev
 
       - name: Build Package
         run: poetry build
-      
+
       - name: Generate CycloneDX SBOM
+        id: generate_sbom
         run: |
           pip install cyclonedx-bom poetry-plugin-export
           poetry export --format requirements.txt --output requirements.txt
@@ -52,15 +50,22 @@ jobs:
           SBOM_FILE="dist/sbom-${{ steps.get_version.outputs.PACKAGE_VERSION }}.cdx.json"
           cyclonedx-py --format json --output $SBOM_FILE --src requirements.txt
           echo "SBOM_PATH=$SBOM_FILE" >> $GITHUB_OUTPUT
-        id: generate_sbom
-          
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
 
-      - name: Attestation
-        uses: actions/attest-build-provenance@v1
+      - name: Attest SBOM
+        uses: actions/attest-sbom@v1
         with:
-          subject-path: |
-            dist/${{ env.PACKAGE_NAME }}-${{ steps.get_version.outputs.PACKAGE_VERSION }}-py3-none-any.whl
-            dist/${{ env.PACKAGE_NAME }}-${{ steps.get_version.outputs.PACKAGE_VERSION }}.tar.gz
+          subject-path: ${{ steps.generate_sbom.outputs.SBOM_PATH }}
+
+      - name: Upload Attestation File
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-attestation
+          path: .github/attestations/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
             ${{ steps.generate_sbom.outputs.SBOM_PATH }}

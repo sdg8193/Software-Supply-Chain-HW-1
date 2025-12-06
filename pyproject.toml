@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sdg8193_rekor"
-version = "0.1.0"
+version = "0.2.0"
 description = "A command-line tool for querying and verifying entries in a Rekor transparency log. This tool allows you to fetch log entries, verify inclusion proofs, and check the consistency of the log's Merkle tree."
 authors = ["Samuel Greenwald <sdg8193@nyu.edu>"]
 license = "MIT License"
