@@ -47,4 +47,4 @@ jobs:
           extra_args: --only-verified
 
       - name: Run Tests & Coverage
-        run: poetry run pytest
+        run: poetry run pytest --cov-fail-under=80
