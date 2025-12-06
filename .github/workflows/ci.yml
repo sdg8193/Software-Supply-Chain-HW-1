@@ -1,0 +1,53 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+
+jobs:
+  ci-pipeline:
+    name: Assignment 5
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 
+
+      - name: Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Dependencies
+        run: poetry install --no-interaction --with dev
+
+      - name: Code Formatting (Black)
+        run: poetry run black --check src
+
+      - name: Linting (Ruff)
+        run: poetry run ruff check src
+
+      - name: Linting (Flake8)
+        run: poetry run flake8 src
+
+      - name: Security Audit (Bandit)
+        run: poetry run bandit -c pyproject.toml -r src
+
+      - name: Secret Scanning (TruffleHog)
+        uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: --only-verified
+
+      - name: Run Tests & Coverage
+        run: poetry run pytest
