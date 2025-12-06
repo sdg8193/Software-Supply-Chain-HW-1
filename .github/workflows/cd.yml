@@ -38,6 +38,9 @@ jobs:
       - name: Install Dependencies
         run: poetry install --no-interaction --with dev
 
+      - name: Clean dist directory
+        run: rm -rf dist && mkdir dist
+
       - name: Build Package
         run: poetry build
 
@@ -63,13 +66,6 @@ jobs:
         uses: actions/attest-sbom@v1
         with:
           subject-path: |
-            dist/*.whl
-            dist/*.tar.gz
+            dist/${{ env.PACKAGE_NAME }}-${{ steps.get_version.outputs.PACKAGE_VERSION }}-*.whl
+            dist/${{ env.PACKAGE_NAME }}-${{ steps.get_version.outputs.PACKAGE_VERSION }}.tar.gz
           sbom-path: ${{ steps.generate_sbom.outputs.SBOM_PATH }}
-
-      - name: Upload Attestation File
-        uses: actions/upload-artifact@v4
-        with:
-          name: sbom-attestation
-          path: .github/attestations/
-
