@@ -27,7 +27,7 @@ jobs:
           CLEAN_VERSION=${VERSION#v}
           echo "PACKAGE_VERSION=$CLEAN_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Set up Python 3.10
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
@@ -44,28 +44,31 @@ jobs:
       - name: Generate CycloneDX SBOM
         id: generate_sbom
         run: |
-          pip install cyclonedx-bom poetry-plugin-export
-          poetry export --format requirements.txt --output requirements.txt
-          
+          pip install cyclonedx-bom
           SBOM_FILE="dist/sbom-${{ steps.get_version.outputs.PACKAGE_VERSION }}.cdx.json"
-          cyclonedx-py --format json --output $SBOM_FILE --src requirements.txt
+          cyclonedx-py poetry --output $SBOM_FILE --format json
           echo "SBOM_PATH=$SBOM_FILE" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        id: release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: "Release ${{ steps.get_version.outputs.PACKAGE_VERSION }}"
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
+            ${{ steps.generate_sbom.outputs.SBOM_PATH }}
 
       - name: Attest SBOM
         uses: actions/attest-sbom@v1
         with:
-          subject-path: ${{ steps.generate_sbom.outputs.SBOM_PATH }}
+          subject-path: |
+            dist/*.whl
+            dist/*.tar.gz
+          sbom-path: ${{ steps.generate_sbom.outputs.SBOM_PATH }}
 
       - name: Upload Attestation File
         uses: actions/upload-artifact@v4
         with:
           name: sbom-attestation
           path: .github/attestations/
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            dist/*.whl
-            dist/*.tar.gz
-            ${{ steps.generate_sbom.outputs.SBOM_PATH }}
