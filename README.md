@@ -1,7 +1,7 @@
 # Python Rekor Verifier 
 ![CI](https://github.com/sdg8193/Software-Supply-Chain-HW-1/actions/workflows/ci.yml/badge.svg)
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/{owner}/{repo}/badge)](https://scorecard.dev/viewer/?uri=github.com/{owner}/{repo})
-[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/11564/badge)](https://www.bestpractices.dev/projects/11564
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/sdg8193/Software-Supply-Chain-HW-1/badge)](https://scorecard.dev/viewer/?uri=github.com/sdg8193/Software-Supply-Chain-HW-1)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/11564/badge)](https://www.bestpractices.dev/projects/11564)
 
 A command-line tool for querying and verifying entries in a Rekor transparency log. This tool allows you to fetch log entries, verify inclusion proofs, and check the consistency of the log's Merkle tree.
 
