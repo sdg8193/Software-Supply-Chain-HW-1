@@ -6,7 +6,7 @@ Only the most recent version of this project, available on the `main` branch, is
 
 | Version | Supported          |
 | ------- | ------------------ |
-| Latest (Release 4.0) | :white_check_mark: |
+| Latest (Release 5.0) | :white_check_mark: |
 
 ## Reporting a Vulnerability
 
