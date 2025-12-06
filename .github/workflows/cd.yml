@@ -1,0 +1,66 @@
+name: CD Pipeline
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write 
+  id-token: write   #
+  attestations: write 
+
+jobs:
+  release:
+    name: Build, Publish, SBOM
+    runs-on: ubuntu-latest
+    env:
+      PACKAGE_NAME: sdg8193_rekor
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Get Version Number
+        id: get_version
+        run: |
+          VERSION=${{ github.event.release.tag_name }}
+          CLEAN_VERSION=${VERSION#v}
+          echo "PACKAGE_VERSION=$CLEAN_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+      
+      - name: Install Dependencies
+        run: poetry install --no-interaction --with dev
+
+      - name: Build Package
+        run: poetry build
+      
+      - name: Generate CycloneDX SBOM
+        run: |
+          pip install cyclonedx-bom poetry-plugin-export
+          poetry export --format requirements.txt --output requirements.txt
+          
+          SBOM_FILE="dist/sbom-${{ steps.get_version.outputs.PACKAGE_VERSION }}.cdx.json"
+          cyclonedx-py --format json --output $SBOM_FILE --src requirements.txt
+          echo "SBOM_PATH=$SBOM_FILE" >> $GITHUB_OUTPUT
+        id: generate_sbom
+          
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+      - name: Attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: |
+            dist/${{ env.PACKAGE_NAME }}-${{ steps.get_version.outputs.PACKAGE_VERSION }}-py3-none-any.whl
+            dist/${{ env.PACKAGE_NAME }}-${{ steps.get_version.outputs.PACKAGE_VERSION }}.tar.gz
+            ${{ steps.generate_sbom.outputs.SBOM_PATH }}
