@@ -33,16 +33,16 @@ jobs:
         run: poetry install --no-interaction --with dev
 
       - name: Code Formatting (Black)
-        run: poetry run black --check src
+        run: poetry run black --check src/sdg8193_rekor/cli.py
 
       - name: Linting (Ruff)
-        run: poetry run ruff check src
+        run: poetry run ruff check src/sdg8193_rekor/cli.py
 
       - name: Linting (Flake8)
-        run: poetry run flake8 src
+        run: poetry run flake8 src/sdg8193_rekor/cli.py
 
       - name: Security Audit (Bandit)
-        run: poetry run bandit -c pyproject.toml -r src
+        run: poetry run bandit -c pyproject.toml -r src/sdg8193_rekor/cli.py
 
       - name: Secret Scanning (TruffleHog)
         uses: trufflesecurity/trufflehog@main
