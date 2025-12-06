@@ -51,7 +51,7 @@ def get_log_entry(log_index, debug=False):
         sys.exit()
 
     url = f"{SERVER}/api/v1/log/entries?logIndex={log_index}"
-    response = requests.get(url,timeout=10)
+    response = requests.get(url, timeout=10)
 
     if response.status_code != 200:
         print(
@@ -191,7 +191,7 @@ def get_latest_checkpoint(debug=False):
         If the HTTP request fails.
     """
     url = f"{SERVER}/api/v1/log"
-    response = requests.get(url,timeout=10)
+    response = requests.get(url, timeout=10)
     if debug:
         print(f"get_latest_checkpoint:\n {response.text}")
     if response.status_code == 200:
@@ -200,7 +200,6 @@ def get_latest_checkpoint(debug=False):
         except ValueError:
             print("Failed to decode JSON from Rekor server")
             sys.exit()
-    
 
     print(f"Error: Status Code - {response.status_code}")
     print(f"Response: {response.text}")
@@ -244,7 +243,7 @@ def consistency(prev_checkpoint, debug=False):
         f"&treeID={tree_id}"
     )
 
-    response = requests.get(proof_url,timeout=10)
+    response = requests.get(proof_url, timeout=10)
     if response.status_code != 200:
         print(f"Failed to fetch consistency proof: {response.status_code}")
         print(response.text)
