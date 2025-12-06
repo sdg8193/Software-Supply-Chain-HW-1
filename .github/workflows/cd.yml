@@ -46,7 +46,7 @@ jobs:
         run: |
           pip install cyclonedx-bom
           SBOM_FILE="dist/sbom-${{ steps.get_version.outputs.PACKAGE_VERSION }}.cdx.json"
-          cyclonedx-py poetry --output $SBOM_FILE --format json
+          cyclonedx-py poetry > "$SBOM_FILE"
           echo "SBOM_PATH=$SBOM_FILE" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
@@ -72,3 +72,4 @@ jobs:
         with:
           name: sbom-attestation
           path: .github/attestations/
+
